@@ -60,9 +60,8 @@ public class VaultService implements Bean {
   }
   public void destroyVault(Vault vault) {
     vault.despawnDecorations();
-
-    vaultStorageCache.invalidate(vault.getBlock());
     repository.deleteVault(vault);
+    vaultStorageCache.invalidate(vault.getBlock());
   }
 
   public Optional<Vault> findVaultAt(Block block) {
