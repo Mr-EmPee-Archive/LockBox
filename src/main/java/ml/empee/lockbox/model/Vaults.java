@@ -27,7 +27,7 @@ public final class Vaults {
     }
 
     public Inventory getInventoryTemplate() {
-      return Bukkit.createInventory(null, InventoryType.DISPENSER);
+      return Bukkit.createInventory(null, InventoryType.DISPENSER, "Vault");
     }
   }
 
