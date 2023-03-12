@@ -9,26 +9,20 @@ import cloud.commandframework.exceptions.NoPermissionException;
 import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.paper.PaperCommandManager;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import ml.empee.ioc.Bean;
 import ml.empee.lockbox.LockBox;
 import ml.empee.lockbox.utils.helpers.Logger;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.function.Function;
 
-@RequiredArgsConstructor
 public class CommandsConfig implements Bean {
 
-  private final LockBox plugin;
-  private final Logger logger;
-  private PaperCommandManager<CommandSender> commandManager;
-  private AnnotationParser<CommandSender> commandParser;
+  private final PaperCommandManager<CommandSender> commandManager;
+  private final AnnotationParser<CommandSender> commandParser;
 
-  @Override
-  @SneakyThrows
-  public void onStart() {
+  public CommandsConfig(JavaPlugin plugin) throws Exception {
     commandManager = new PaperCommandManager<>(
         plugin, CommandExecutionCoordinator.simpleCoordinator(), Function.identity(), Function.identity()
     );
@@ -42,29 +36,29 @@ public class CommandsConfig implements Bean {
     try {
       commandManager.registerBrigadier();
     } catch (BukkitCommandManager.BrigadierFailureException e) {
-      logger.warning("Command suggestion not supported! If you think this is an error make sure to use paper");
+      Logger.warning("Command suggestion not supported! If you think this is an error make sure to use paper");
     }
   }
 
   private void registerExceptionHandlers() {
     commandManager.registerExceptionHandler(NoPermissionException.class, (sender, e) -> {
-      logger.log(sender, "cmd-no-permission");
+      Logger.translatedLog(sender, "cmd-no-permission");
     });
 
     commandManager.registerExceptionHandler(InvalidSyntaxException.class, (sender, e) -> {
-      logger.log(sender, "cmd-invalid-syntax");
+      Logger.translatedLog(sender, "cmd-invalid-syntax");
     });
 
     commandManager.registerExceptionHandler(InvalidCommandSenderException.class, (sender, e) -> {
-      logger.log(sender, "cmd-invalid-sender");
+      Logger.translatedLog(sender, "cmd-invalid-sender");
     });
 
     commandManager.registerExceptionHandler(ArgumentParseException.class, (sender, e) -> {
-      logger.log(sender, "cmd-invalid-argument", e.getCause().getMessage());
+      Logger.translatedLog(sender, "cmd-invalid-argument", e.getCause().getMessage());
     });
 
     commandManager.registerExceptionHandler(Exception.class, (sender, e) -> {
-      logger.log(sender, "cmd-exception");
+      Logger.translatedLog(sender, "cmd-exception");
     });
   }
 

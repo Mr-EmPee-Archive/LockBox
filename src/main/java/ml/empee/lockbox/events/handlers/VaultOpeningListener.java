@@ -23,7 +23,6 @@ import org.bukkit.inventory.EquipmentSlot;
 public class VaultOpeningListener implements Bean, RegisteredListener {
 
   private final VaultService vaultService;
-  private final Logger logger;
 
   @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled=true)
   public void onVaultOpen(PlayerInteractEvent event) {
@@ -68,7 +67,7 @@ public class VaultOpeningListener implements Bean, RegisteredListener {
     try {
       vaultService.openVault(vault, player);
     } catch (VaultUnauthorizedException e) {
-      logger.log(player, "Not authorized!");
+      Logger.translatedLog(player, "vault-auth-failed");
     }
   }
 

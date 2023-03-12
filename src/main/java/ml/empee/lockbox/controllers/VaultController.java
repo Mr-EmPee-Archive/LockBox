@@ -4,7 +4,6 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandMethod;
 import lombok.RequiredArgsConstructor;
 import ml.empee.ioc.Bean;
-import ml.empee.lockbox.model.Vaults;
 import ml.empee.lockbox.registries.VaultRegistry;
 import ml.empee.lockbox.config.CommandsConfig;
 import ml.empee.lockbox.utils.helpers.Logger;
@@ -18,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 public class VaultController implements Bean {
 
   private final CommandsConfig commandsConfig;
-  private final Logger logger;
   private final VaultRegistry vaultRegistry;
 
   @Override
@@ -29,14 +27,14 @@ public class VaultController implements Bean {
   @CommandMethod("vault give <type> [target]")
   public void giveVault(
       CommandSender sender,
-      @Argument Vaults.Type type,
+      @Argument VaultRegistry.Type type,
       @Argument @Nullable Player target
   ) {
     if (target == null) {
       if (sender instanceof Player) {
         target = (Player) sender;
       } else {
-        logger.log(sender, "You must select a player");
+        Logger.log(sender, "&cYou must select a player");
         return;
       }
     }
@@ -45,13 +43,13 @@ public class VaultController implements Bean {
 
     boolean hasSucceed = target.getInventory().addItem(lock).isEmpty();
     if (!hasSucceed) {
-      logger.log(sender,
-          "Unable to give vault to &e%s&r his inventory was full", target.getName()
+      Logger.log(sender,
+          "&cUnable to give vault to &e%s&e his inventory was full", target.getName()
       );
       return;
     }
 
-    logger.log(sender, "Vault given to &e%s", target.getName());
+    Logger.log(sender, "&7Vault given to &e%s", target.getName());
   }
 
 }

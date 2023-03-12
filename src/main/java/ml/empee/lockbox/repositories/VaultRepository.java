@@ -4,11 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import ml.empee.ioc.Bean;
 import ml.empee.lockbox.model.Vault;
-import ml.empee.lockbox.model.Vaults;
+import ml.empee.lockbox.registries.VaultRegistry;
 import ml.empee.lockbox.utils.ItemSerializer;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Marker;
@@ -16,7 +15,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.IOException;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -25,6 +23,8 @@ public class VaultRepository implements Bean {
   private static final JavaPlugin plugin = JavaPlugin.getProvidingPlugin(VaultRepository.class);
   private static final NamespacedKey dataContainerId = new NamespacedKey(plugin, "vaultData");
   private static final NamespacedKey storageId = new NamespacedKey(plugin, "vaultStorage");
+
+  private final VaultRegistry vaultRegistry;
 
   private static String computeVaultId(Vault vault) {
     Location location = vault.getLocation();
@@ -35,15 +35,18 @@ public class VaultRepository implements Bean {
         + location.getZ() + "Z";
   }
 
-  public void createVault(Vault vault) {
-    if(findDataContainer(vault).isPresent()) {
-      throw new IllegalArgumentException("Vault already existing at " + vault.getLocation());
+  public Vault saveVault(Block block, VaultRegistry.Type type) {
+    if(findVaultAt(block).isPresent()) {
+      throw new IllegalArgumentException("Vault already existing at " + block.getLocation());
     }
 
-    World world = vault.getBlock().getWorld();
-    Marker marker = (Marker) world.spawnEntity(vault.getLocation(), EntityType.MARKER);
+    Vault vault = vaultRegistry.buildVault(block, type);
+
+    Marker marker = (Marker) block.getWorld().spawnEntity(block.getLocation(), EntityType.MARKER);
     marker.getPersistentDataContainer().set(dataContainerId, PersistentDataType.STRING, computeVaultId(vault));
     marker.setPersistent(true);
+
+    return vaultRegistry.buildVault(block, type);
   }
   public void deleteVault(Vault vault) {
     Marker marker = findDataContainer(vault).orElseThrow(
@@ -54,17 +57,17 @@ public class VaultRepository implements Bean {
   }
 
   @SneakyThrows
-  public ItemStack[] getVaultStorage(Vault vault) {
+  public Optional<ItemStack[]> getVaultStorage(Vault vault) {
     Marker marker = findDataContainer(vault).orElseThrow(
         () -> new IllegalArgumentException("Unable to find data-container for vault at " + vault.getLocation())
     );
 
     String encodedInventory = marker.getPersistentDataContainer().get(storageId, PersistentDataType.STRING);
     if(encodedInventory == null) {
-      return new ItemStack[0];
+      return Optional.empty();
     }
 
-    return ItemSerializer.inventoryFromBase64(encodedInventory);
+    return Optional.of(ItemSerializer.inventoryFromBase64(encodedInventory));
   }
 
   @SneakyThrows
@@ -80,14 +83,23 @@ public class VaultRepository implements Bean {
   public boolean existsVaultAt(Block block) {
     return findDataContainer(block.getLocation()).isPresent();
   }
-  public Optional<Vaults.Type> getVaultTypeAt(Block block) {
+  private VaultRegistry.Type findVaultTypeAt(Block block) {
     Marker marker = findDataContainer(block.getLocation()).orElse(null);
     if(marker == null) {
-      return Optional.empty();
+      return null;
     }
 
     String rawType = marker.getPersistentDataContainer().get(dataContainerId, PersistentDataType.STRING);
-    return Optional.of(Vaults.Type.valueOf(rawType.split("T")[0]));
+    return VaultRegistry.Type.valueOf(rawType.split("T")[0]);
+  }
+
+  public Optional<Vault> findVaultAt(Block block) {
+    VaultRegistry.Type vaultType = findVaultTypeAt(block);
+    if(vaultType == null) {
+      return Optional.empty();
+    }
+
+    return Optional.of(vaultRegistry.buildVault(block, vaultType));
   }
 
   private Optional<Marker> findDataContainer(Vault vault) {

@@ -8,7 +8,7 @@ import lombok.SneakyThrows;
 import ml.empee.ioc.Bean;
 import ml.empee.lockbox.exceptions.VaultUnauthorizedException;
 import ml.empee.lockbox.model.Vault;
-import ml.empee.lockbox.model.Vaults;
+import ml.empee.lockbox.registries.VaultRegistry;
 import ml.empee.lockbox.repositories.VaultRepository;
 import ml.empee.lockbox.utils.helpers.Logger;
 import org.bukkit.block.Block;
@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 public class VaultService implements Bean {
 
   private final VaultRepository repository;
-  private final Logger logger;
 
   private Cache<Block, Inventory> vaultStorageCache = CacheBuilder.newBuilder().build();
 
@@ -46,16 +45,14 @@ public class VaultService implements Bean {
       if(vault != null) {
         repository.setVaultStorage(vault, event.getValue().getStorageContents());
       } else {
-        logger.debug("Unable to save content of cached vault at " + event.getKey().getLocation());
+        Logger.debug("Unable to save content of cached vault at " + event.getKey().getLocation());
       }
     };
   }
 
-  public Vault createVault(Block block, BlockFace front, Vaults.Type type) {
-    Vault vault = Vaults.buildVault(block, type);
-
+  public Vault createVault(Block block, BlockFace front, VaultRegistry.Type type) {
+    Vault vault = repository.saveVault(block, type);
     vault.spawnDecorations(front);
-    repository.createVault(vault);
     return vault;
   }
   public void destroyVault(Vault vault) {
@@ -65,12 +62,7 @@ public class VaultService implements Bean {
   }
 
   public Optional<Vault> findVaultAt(Block block) {
-    Vaults.Type vaultType = repository.getVaultTypeAt(block).orElse(null);
-    if(vaultType == null) {
-      return Optional.empty();
-    }
-
-    return Optional.of(Vaults.buildVault(block, vaultType));
+    return repository.findVaultAt(block);
   }
 
   public void openVault(Vault vault, Player player) throws VaultUnauthorizedException {
@@ -87,7 +79,7 @@ public class VaultService implements Bean {
   public Inventory getVaultInventory(Vault vault) {
     return vaultStorageCache.get(vault.getBlock(), () -> {
       Inventory inventory = vault.getInventoryTemplate();
-      inventory.setContents(repository.getVaultStorage(vault));
+      repository.getVaultStorage(vault).ifPresent(inventory::setContents);
       return inventory;
     });
   }

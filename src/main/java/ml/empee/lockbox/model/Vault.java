@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.Delegate;
 import ml.empee.lockbox.model.decorations.VaultDecorator;
 import ml.empee.lockbox.model.protections.VaultProtection;
+import ml.empee.lockbox.registries.VaultRegistry;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.Inventory;
@@ -13,7 +14,7 @@ import org.bukkit.inventory.Inventory;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class Vault {
   @Getter
-  private final Vaults.Type type;
+  private final VaultRegistry.Type type;
   @Getter
   private final Block block;
 

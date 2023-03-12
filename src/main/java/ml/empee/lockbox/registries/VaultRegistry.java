@@ -1,15 +1,11 @@
 package ml.empee.lockbox.registries;
 
-import lombok.RequiredArgsConstructor;
 import ml.empee.ioc.Bean;
-import ml.empee.itembuilder.ItemBuilder;
-import ml.empee.lockbox.config.PluginConfig;
-import ml.empee.lockbox.model.Vaults;
+import ml.empee.lockbox.model.Vault;
+import ml.empee.lockbox.model.vaults.KeyVault;
 import ml.empee.lockbox.utils.helpers.PluginItem;
-import ml.empee.lockbox.utils.helpers.TranslationManager;
-import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,56 +15,42 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static ml.empee.lockbox.model.Vaults.*;
-
-/** Repository that maps in-game items to lock types **/
-
-@RequiredArgsConstructor
 public final class VaultRegistry implements Bean {
 
-  private final Map<Type, PluginItem> registry = new HashMap<>();
-  private final PluginConfig config;
-  private final TranslationManager translationManager;
-  private final JavaPlugin plugin;
+  private final Map<Type, PluginItem> items = new HashMap<>();
 
-  @Override
-  public void onStart() {
-    registry.put(Type.KEY, buildKeyVaultItem());
+  public VaultRegistry() {
+    items.put(Type.KEY, KeyVault.ITEM);
   }
 
   public Collection<PluginItem> getAllVaultsItems() {
-    return Collections.unmodifiableCollection(registry.values());
+    return Collections.unmodifiableCollection(items.values());
   }
   public PluginItem findItemByType(@NotNull Type type) {
-    return registry.get(type);
+    return items.get(type);
   }
   public Optional<Type> findVaultTypeByItem(@Nullable ItemStack item) {
     if (item == null || !item.hasItemMeta()) {
       return Optional.empty();
     }
 
-    return registry.entrySet().stream()
+    return items.entrySet().stream()
         .filter(e -> e.getValue().isPluginItem(item))
         .map(Map.Entry::getKey)
         .findFirst();
   }
 
-  private String[] getLoreByType(Type type) {
-    String translation = translationManager.getTranslation("vault-" + type.name().toLowerCase() + "-lore", config.getLanguage());
-    if(translation.endsWith("\n")) {
-      translation += " ";
+  public Vault buildVault(Block block, Type type) {
+    switch (type) {
+      case KEY -> {
+        return new KeyVault(block);
+      }
+
+      default -> throw new UnsupportedOperationException("Vault not existing!");
     }
-
-    return translation.split("\n");
   }
 
-  private PluginItem buildKeyVaultItem() {
-    return PluginItem.of(
-        plugin, "key_vault", "1",
-        ItemBuilder.from(Material.COAL_BLOCK)
-            .setName("&9Vault")
-            .setLore(getLoreByType(Type.KEY))
-    );
+  public enum Type {
+    KEY, PIN, BIOMETRIC
   }
-
 }

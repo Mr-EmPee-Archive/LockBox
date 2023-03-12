@@ -27,7 +27,6 @@ import org.bukkit.inventory.ItemStack;
 public class VaultProtectionListener implements RegisteredListener, Bean {
 
   private final VaultService vaultService;
-  private final Logger logger;
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   public void onVaultExplode(EntityExplodeEvent event) {
@@ -80,7 +79,7 @@ public class VaultProtectionListener implements RegisteredListener, Bean {
 
     if(!isEmpty) {
       event.setCancelled(true);
-      logger.translatedLog(event.getPlayer(), "vault-not-empty");
+      Logger.translatedLog(event.getPlayer(), "vault-not-empty");
     }
   }
 
