@@ -5,11 +5,14 @@ import ml.empee.ioc.Bean;
 import ml.empee.ioc.RegisteredListener;
 import ml.empee.lockbox.model.Vault;
 import ml.empee.lockbox.services.VaultService;
+import ml.empee.lockbox.utils.helpers.Logger;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Hanging;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFadeEvent;
@@ -18,11 +21,13 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.inventory.ItemStack;
 
 @RequiredArgsConstructor
 public class VaultProtectionListener implements RegisteredListener, Bean {
 
   private final VaultService vaultService;
+  private final Logger logger;
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   public void onVaultExplode(EntityExplodeEvent event) {
@@ -54,6 +59,28 @@ public class VaultProtectionListener implements RegisteredListener, Bean {
   public void onVaultRemove(EntityChangeBlockEvent event) {
     if(vaultService.findVaultAt(event.getBlock()).isPresent()) {
       event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  public void onVaultBreak(BlockBreakEvent event) {
+    Vault vault = vaultService.findVaultAt(event.getBlock()).orElse(null);
+    if(vault == null) {
+      return;
+    }
+
+    boolean isEmpty = true;
+    ItemStack[] storage = vaultService.getVaultInventory(vault).getContents();
+    for (ItemStack item : storage) {
+      if(item != null && item.getType() != Material.AIR) {
+        isEmpty = false;
+        break;
+      }
+    }
+
+    if(!isEmpty) {
+      event.setCancelled(true);
+      logger.translatedLog(event.getPlayer(), "vault-not-empty");
     }
   }
 
