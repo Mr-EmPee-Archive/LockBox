@@ -60,6 +60,10 @@ public class VaultRepository implements Bean {
     );
 
     String encodedInventory = marker.getPersistentDataContainer().get(storageId, PersistentDataType.STRING);
+    if(encodedInventory == null) {
+      return new ItemStack[0];
+    }
+
     return ItemSerializer.inventoryFromBase64(encodedInventory);
   }
 
