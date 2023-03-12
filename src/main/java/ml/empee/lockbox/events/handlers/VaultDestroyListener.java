@@ -14,7 +14,7 @@ public class VaultDestroyListener implements Bean, RegisteredListener {
 
   private final VaultService vaultService;
 
-  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
   public void onBlockBreak(BlockBreakEvent event) {
     Vault vault = vaultService.findVaultAt(event.getBlock()).orElse(null);
     if(vault == null) {

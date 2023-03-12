@@ -20,7 +20,7 @@ public class VaultPlacingListener implements RegisteredListener, Bean {
   private final VaultService vaultService;
   private final VaultRegistry vaultRegistry;
 
-  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
   public void onBlockPlace(BlockPlaceEvent event) {
     ItemStack item = event.getItemInHand();
 
