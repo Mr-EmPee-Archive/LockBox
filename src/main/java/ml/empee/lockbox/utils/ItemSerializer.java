@@ -48,7 +48,7 @@ public class ItemSerializer {
    * @return Inventory created from the Base64 string.
    */
   public static ItemStack[] inventoryFromBase64(String data) throws IOException {
-    if(data == null || data.isEmpty()) {
+    if(data.isEmpty()) {
       return new ItemStack[0];
     }
 

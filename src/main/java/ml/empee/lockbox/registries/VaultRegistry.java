@@ -1,11 +1,10 @@
-package ml.empee.lockbox;
+package ml.empee.lockbox.registries;
 
-import com.google.common.base.Splitter;
 import lombok.RequiredArgsConstructor;
 import ml.empee.ioc.Bean;
 import ml.empee.itembuilder.ItemBuilder;
 import ml.empee.lockbox.config.PluginConfig;
-import ml.empee.lockbox.model.Vault.Type;
+import ml.empee.lockbox.model.Vaults;
 import ml.empee.lockbox.utils.helpers.PluginItem;
 import ml.empee.lockbox.utils.helpers.TranslationManager;
 import org.bukkit.Material;
@@ -14,15 +13,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
+
+import static ml.empee.lockbox.model.Vaults.*;
 
 /** Repository that maps in-game items to lock types **/
 
@@ -36,30 +33,24 @@ public final class VaultRegistry implements Bean {
 
   @Override
   public void onStart() {
-    registry.put(Type.KEY, buildKeyAccessedVault());
-  }
-
-  public PluginItem findItemByType(@NotNull Type type) {
-    return registry.get(type);
+    registry.put(Type.KEY, buildKeyVaultItem());
   }
 
   public Collection<PluginItem> getAllVaultsItems() {
     return Collections.unmodifiableCollection(registry.values());
   }
-
-  @SuppressWarnings("MissingJavaDocMethod")
+  public PluginItem findItemByType(@NotNull Type type) {
+    return registry.get(type);
+  }
   public Optional<Type> findVaultTypeByItem(@Nullable ItemStack item) {
-    if (item != null && item.hasItemMeta()) {
-
-      for (Entry<Type, PluginItem> entry : registry.entrySet()) {
-        if (entry.getValue().isPluginItem(item)) {
-          return Optional.of(entry.getKey());
-        }
-      }
-
+    if (item == null || !item.hasItemMeta()) {
+      return Optional.empty();
     }
 
-    return Optional.empty();
+    return registry.entrySet().stream()
+        .filter(e -> e.getValue().isPluginItem(item))
+        .map(Map.Entry::getKey)
+        .findFirst();
   }
 
   private String[] getLoreByType(Type type) {
@@ -71,7 +62,7 @@ public final class VaultRegistry implements Bean {
     return translation.split("\n");
   }
 
-  private PluginItem buildKeyAccessedVault() {
+  private PluginItem buildKeyVaultItem() {
     return PluginItem.of(
         plugin, "key_vault", "1",
         ItemBuilder.from(Material.COAL_BLOCK)

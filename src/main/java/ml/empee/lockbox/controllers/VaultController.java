@@ -4,23 +4,14 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandMethod;
 import lombok.RequiredArgsConstructor;
 import ml.empee.ioc.Bean;
-import ml.empee.lockbox.VaultRegistry;
+import ml.empee.lockbox.model.Vaults;
+import ml.empee.lockbox.registries.VaultRegistry;
 import ml.empee.lockbox.config.CommandsConfig;
-import ml.empee.lockbox.model.Vault;
-import ml.empee.lockbox.utils.LocationUtils;
 import ml.empee.lockbox.utils.helpers.Logger;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Set;
 
 /** Controller used for managing the plugin. **/
 @RequiredArgsConstructor
@@ -38,7 +29,7 @@ public class VaultController implements Bean {
   @CommandMethod("vault give <type> [target]")
   public void giveVault(
       CommandSender sender,
-      @Argument Vault.Type type,
+      @Argument Vaults.Type type,
       @Argument @Nullable Player target
   ) {
     if (target == null) {
