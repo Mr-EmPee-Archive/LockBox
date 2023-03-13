@@ -2,6 +2,7 @@ package ml.empee.lockbox.registries;
 
 import ml.empee.ioc.Bean;
 import ml.empee.lockbox.model.Vault;
+import ml.empee.lockbox.registries.items.VaultItem;
 import ml.empee.lockbox.model.vaults.KeyVault;
 import ml.empee.lockbox.utils.helpers.PluginItem;
 import org.bukkit.block.Block;
@@ -9,41 +10,38 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class VaultRegistry implements Bean {
 
-  private final Map<Type, PluginItem> items = new HashMap<>();
+  private final List<VaultItem> items = new ArrayList<>();
 
   public VaultRegistry() {
-    items.put(Type.KEY, KeyVault.ITEM);
+    items.add(KeyVault.ITEM);
   }
 
-  public Collection<PluginItem> getAllVaultsItems() {
-    return Collections.unmodifiableCollection(items.values());
-  }
   public PluginItem findItemByType(@NotNull Type type) {
-    return items.get(type);
+    return items.stream()
+        .filter(i -> i.getType() == type)
+        .findFirst().orElseThrow();
   }
-  public Optional<Type> findVaultTypeByItem(@Nullable ItemStack item) {
+  public Optional<VaultItem> findVaultItem(@Nullable ItemStack item) {
     if (item == null || !item.hasItemMeta()) {
       return Optional.empty();
     }
 
-    return items.entrySet().stream()
-        .filter(e -> e.getValue().isPluginItem(item))
-        .map(Map.Entry::getKey)
+    return items.stream()
+        .filter(e -> e.isPluginItem(item))
         .findFirst();
   }
 
-  public Vault buildVault(Block block, Type type) {
+  public Vault buildVault(UUID uuid, Block block, Type type) {
     switch (type) {
       case KEY -> {
-        return new KeyVault(block);
+        return new KeyVault(uuid, block);
       }
 
       default -> throw new UnsupportedOperationException("Vault not existing!");

@@ -3,7 +3,6 @@ package ml.empee.lockbox.events.handlers;
 import lombok.RequiredArgsConstructor;
 import ml.empee.ioc.Bean;
 import ml.empee.ioc.RegisteredListener;
-import ml.empee.lockbox.exceptions.VaultUnauthorizedException;
 import ml.empee.lockbox.model.Vault;
 import ml.empee.lockbox.services.VaultService;
 import ml.empee.lockbox.utils.helpers.Logger;
@@ -18,6 +17,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 
 @RequiredArgsConstructor
 public class VaultOpeningListener implements Bean, RegisteredListener {
@@ -64,11 +64,13 @@ public class VaultOpeningListener implements Bean, RegisteredListener {
   }
 
   private void openVault(Vault vault, Player player) {
-    try {
-      vaultService.openVault(vault, player);
-    } catch (VaultUnauthorizedException e) {
+    Inventory vaultInventory = vaultService.getVaultInventory(vault);
+    if(!vault.hasAccess(player, vaultInventory.getContents())) {
       Logger.translatedLog(player, "vault-auth-failed");
+      return;
     }
+
+    player.openInventory(vaultInventory);
   }
 
 }

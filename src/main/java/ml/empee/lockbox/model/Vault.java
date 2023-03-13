@@ -11,8 +11,12 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.Inventory;
 
+import java.util.UUID;
+
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class Vault {
+  @Getter
+  private final UUID uuid;
   @Getter
   private final VaultRegistry.Type type;
   @Getter

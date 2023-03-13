@@ -6,6 +6,7 @@ import ml.empee.itembuilder.utils.ItemNbt;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 /** Allow you to easily create a custom item **/
 
@@ -16,7 +17,7 @@ public class PluginItem {
   protected final ItemBuilder item;
   protected final String version;
 
-  protected PluginItem(JavaPlugin plugin, String name, String version, ItemBuilder item) {
+  public PluginItem(JavaPlugin plugin, String name, String version, ItemBuilder item) {
     this.plugin = plugin;
     this.name = name;
     this.item = item;
@@ -26,16 +27,8 @@ public class PluginItem {
     item.setNbt(name, version);
   }
 
-  protected PluginItem(JavaPlugin plugin, String name, String version, Material item) {
+  public PluginItem(JavaPlugin plugin, String name, String version, Material item) {
     this(plugin, name, version, ItemBuilder.from(item));
-  }
-
-  public static PluginItem of(JavaPlugin plugin, String name, String version, ItemBuilder item) {
-    return new PluginItem(plugin, name, version, item);
-  }
-
-  public static PluginItem of(JavaPlugin plugin, String name, String version, Material item) {
-    return new PluginItem(plugin, name, version, item);
   }
 
   public ItemStack build() {
@@ -45,7 +38,11 @@ public class PluginItem {
   /**
    * Check if an itemStack is the custom item
    */
-  public boolean isPluginItem(ItemStack item, boolean ignoreVersion) {
+  public boolean isPluginItem(@Nullable ItemStack item, boolean ignoreVersion) {
+    if(item == null || !item.hasItemMeta()) {
+      return false;
+    }
+
     String itemVersion = ItemNbt.getString(plugin, item, name);
     if (itemVersion == null) {
       return false;
@@ -57,7 +54,7 @@ public class PluginItem {
   /**
    * Check if an itemStack is the custom item
    */
-  public boolean isPluginItem(ItemStack item) {
+  public boolean isPluginItem(@Nullable ItemStack item) {
     return isPluginItem(item, false);
   }
 

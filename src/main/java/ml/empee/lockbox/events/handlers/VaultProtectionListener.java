@@ -1,13 +1,14 @@
 package ml.empee.lockbox.events.handlers;
 
+import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import ml.empee.ioc.Bean;
 import ml.empee.ioc.RegisteredListener;
 import ml.empee.lockbox.model.Vault;
 import ml.empee.lockbox.services.VaultService;
+import ml.empee.lockbox.utils.CollectionUtils;
 import ml.empee.lockbox.utils.helpers.Logger;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Hanging;
 import org.bukkit.event.EventHandler;
@@ -22,6 +23,11 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 public class VaultProtectionListener implements RegisteredListener, Bean {
@@ -68,18 +74,11 @@ public class VaultProtectionListener implements RegisteredListener, Bean {
       return;
     }
 
-    boolean isEmpty = true;
-    ItemStack[] storage = vaultService.getVaultInventory(vault).getContents();
-    for (ItemStack item : storage) {
-      if(item != null && item.getType() != Material.AIR) {
-        isEmpty = false;
-        break;
-      }
-    }
-
-    if(!isEmpty) {
+    List<ItemStack> originalStorage = Arrays.asList(vault.getInventoryTemplate().getContents());
+    List<ItemStack> currentStorage = Arrays.asList(vaultService.getVaultInventory(vault).getContents());
+    if(!CollectionUtils.hasAllItems(originalStorage, currentStorage)) {
       event.setCancelled(true);
-      Logger.translatedLog(event.getPlayer(), "vault-not-empty");
+      Logger.translatedLog(event.getPlayer(), "vault-not-original-state");
     }
   }
 

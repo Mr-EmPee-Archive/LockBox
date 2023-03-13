@@ -6,7 +6,6 @@ import com.google.common.cache.RemovalListener;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import ml.empee.ioc.Bean;
-import ml.empee.lockbox.exceptions.VaultUnauthorizedException;
 import ml.empee.lockbox.model.Vault;
 import ml.empee.lockbox.registries.VaultRegistry;
 import ml.empee.lockbox.repositories.VaultRepository;
@@ -63,16 +62,6 @@ public class VaultService implements Bean {
 
   public Optional<Vault> findVaultAt(Block block) {
     return repository.findVaultAt(block);
-  }
-
-  public void openVault(Vault vault, Player player) throws VaultUnauthorizedException {
-    if(!vault.hasAccess(player)) {
-      throw new VaultUnauthorizedException();
-    }
-
-    player.openInventory(
-        getVaultInventory(vault)
-    );
   }
 
   @SneakyThrows
