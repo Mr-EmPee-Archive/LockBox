@@ -8,6 +8,8 @@ import ml.empee.lockbox.registries.VaultRegistry;
 import ml.empee.lockbox.utils.ItemSerializer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Marker;
 import org.bukkit.inventory.ItemStack;
@@ -35,30 +37,35 @@ public class VaultRepository implements Bean {
     }
 
     UUID uuid = UUID.randomUUID();
-    Marker marker = (Marker) block.getWorld().spawnEntity(block.getLocation(), EntityType.MARKER);
-    marker.getPersistentDataContainer().set(uuidKey, PersistentDataType.STRING, uuid.toString());
-    marker.getPersistentDataContainer().set(idKey, PersistentDataType.INTEGER, block.getLocation().hashCode());
-    marker.getPersistentDataContainer().set(typeKey, PersistentDataType.STRING, type.name());
-    marker.setPersistent(true);
+    ArmorStand entity = (ArmorStand) block.getWorld().spawnEntity(block.getLocation(), EntityType.ARMOR_STAND);
+    entity.getPersistentDataContainer().set(uuidKey, PersistentDataType.STRING, uuid.toString());
+    entity.getPersistentDataContainer().set(idKey, PersistentDataType.INTEGER, block.getLocation().hashCode());
+    entity.getPersistentDataContainer().set(typeKey, PersistentDataType.STRING, type.name());
+
+    entity.setMarker(true);
+    entity.setVisible(false);
+    entity.setSmall(true);
+    entity.setGravity(false);
+    entity.setPersistent(true);
 
     return vaultRegistry.buildVault(uuid, block, type);
   }
 
   public void deleteVault(Vault vault) {
-    Marker marker = findDataContainer(vault).orElseThrow(
+    Entity entity = findDataContainer(vault).orElseThrow(
         () -> new IllegalArgumentException("Unable to find data-container for vault at " + vault.getLocation())
     );
 
-    marker.remove();
+    entity.remove();
   }
 
   @SneakyThrows
   public Optional<ItemStack[]> getVaultStorage(Vault vault) {
-    Marker marker = findDataContainer(vault).orElseThrow(
+    Entity entity = findDataContainer(vault).orElseThrow(
         () -> new IllegalArgumentException("Unable to find data-container for vault at " + vault.getLocation())
     );
 
-    String encodedInventory = marker.getPersistentDataContainer().get(storageKey, PersistentDataType.STRING);
+    String encodedInventory = entity.getPersistentDataContainer().get(storageKey, PersistentDataType.STRING);
     if (encodedInventory == null) {
       return Optional.empty();
     }
@@ -68,12 +75,12 @@ public class VaultRepository implements Bean {
 
   @SneakyThrows
   public void setVaultStorage(Vault vault, ItemStack[] items) {
-    Marker marker = findDataContainer(vault).orElseThrow(
+    Entity entity = findDataContainer(vault).orElseThrow(
         () -> new IllegalArgumentException("Unable to find data-container for vault at " + vault.getLocation())
     );
 
     String encodedInventory = ItemSerializer.toBase64(items);
-    marker.getPersistentDataContainer().set(storageKey, PersistentDataType.STRING, encodedInventory);
+    entity.getPersistentDataContainer().set(storageKey, PersistentDataType.STRING, encodedInventory);
   }
 
   public boolean existsVaultAt(Block block) {
@@ -81,23 +88,23 @@ public class VaultRepository implements Bean {
   }
 
   private UUID findVaultUUIDAt(Block block) {
-    Marker marker = findDataContainer(block).orElse(null);
-    if (marker == null) {
+    Entity entity = findDataContainer(block).orElse(null);
+    if (entity == null) {
       return null;
     }
 
     return UUID.fromString(
-        marker.getPersistentDataContainer().get(uuidKey, PersistentDataType.STRING)
+        entity.getPersistentDataContainer().get(uuidKey, PersistentDataType.STRING)
     );
   }
   private VaultRegistry.Type findVaultTypeAt(Block block) {
-    Marker marker = findDataContainer(block).orElse(null);
-    if (marker == null) {
+    Entity entity = findDataContainer(block).orElse(null);
+    if (entity == null) {
       return null;
     }
 
     return VaultRegistry.Type.valueOf(
-        marker.getPersistentDataContainer().get(typeKey, PersistentDataType.STRING)
+        entity.getPersistentDataContainer().get(typeKey, PersistentDataType.STRING)
     );
   }
 
@@ -113,12 +120,12 @@ public class VaultRepository implements Bean {
     );
   }
 
-  private Optional<Marker> findDataContainer(Vault vault) {
+  private Optional<Entity> findDataContainer(Vault vault) {
     return findDataContainer(vault.getBlock());
   }
-  private Optional<Marker> findDataContainer(Block block) {
+  private Optional<Entity> findDataContainer(Block block) {
     return block.getLocation()
-        .getNearbyEntitiesByType(Marker.class, 1).stream()
+        .getNearbyEntities(1, 1, 1).stream()
         .filter(e ->
             Objects.equals(
                 block.getLocation().hashCode(), e.getPersistentDataContainer().get(idKey, PersistentDataType.INTEGER)
