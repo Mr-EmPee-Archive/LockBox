@@ -26,7 +26,7 @@ public final class VaultRegistry implements Bean {
   public PluginItem findItemByType(@NotNull Type type) {
     return items.stream()
         .filter(i -> i.getType() == type)
-        .findFirst().orElseThrow();
+        .findFirst().orElseThrow(() -> new UnsupportedOperationException("Vault not implemented!"));
   }
   public Optional<VaultItem> findVaultItem(@Nullable ItemStack item) {
     if (item == null || !item.hasItemMeta()) {
@@ -49,6 +49,6 @@ public final class VaultRegistry implements Bean {
   }
 
   public enum Type {
-    KEY, PIN, BIOMETRIC
+    KEY //PIN, BIOMETRIC
   }
 }
